@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}VisionGuard - Query Audit History (Task 5){% endblock %}
+
+{% block content %}
+<div class="hero-section" style="margin-bottom: 2rem;">
+  <span class="hero-tag">📊 Task 5 Permanent Database Audit Trail</span>
+  <h1 class="hero-title" style="font-size: 2.25rem;">Inference Query History</h1>
+  <p class="hero-desc">
+    Immutable audit records showing decision outcomes, timestamps, confidence values,
+    and processing latency logged directly to SQLite.
+  </p>
+</div>
+
+<!-- Stat Metric Cards -->
+<div class="stats-cards-grid">
+  <div class="stat-card">
+    <div class="stat-val" style="color: var(--accent-cyan);">{{ stats.total_queries }}</div>
+    <div class="stat-lbl">Total Queries</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="color: var(--badge-real-text);">{{ stats.real_count }}</div>
+    <div class="stat-lbl">Human Art Detections</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="color: var(--badge-ai-text);">{{ stats.ai_count }}</div>
+    <div class="stat-lbl">AI Synthetic Detections</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="color: #fbbf24;">{{ stats.avg_latency_ms }} ms</div>
+    <div class="stat-lbl">Average Latency</div>
+  </div>
+</div>
+
+<!-- History Records Table -->
+<div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
+  {% if records %}
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Timestamp</th>
+          <th>Image Name</th>
+          <th>Decision Verdict</th>
+          <th>Confidence</th>
+          <th>Raw Output</th>
+          <th>Latency</th>
+          <th>Model Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+          <tr>
+            <td style="color: var(--text-dim); font-family: var(--font-mono);">#{{ r.id }}</td>
+            <td style="white-space: nowrap; color: var(--text-muted); font-size: 0.85rem;">{{ r.timestamp }}</td>
+            <td style="font-weight: 600; color: #fff;">{{ r.filename }}</td>
+            <td>
+              {% if r.verdict_code == 'REAL' %}
+                <span class="badge real">🌿 Real Art</span>
+              {% else %}
+                <span class="badge ai">🤖 AI Generated</span>
+              {% endif %}
+            </td>
+            <td style="font-weight: 700;">{{ "%.2f"|format(r.confidence * 100) }}%</td>
+            <td style="font-family: var(--font-mono); color: var(--text-muted);">{{ "%.4f"|format(r.raw_probability) }}</td>
+            <td style="font-family: var(--font-mono); color: var(--accent-cyan);">{{ r.latency_ms }} ms</td>
+            <td style="color: var(--text-dim); font-size: 0.8rem;">{{ r.model_version }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-dim);">
+      <p style="font-size: 2rem; margin-bottom: 0.5rem;">📂</p>
+      <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-muted);">No queries recorded yet</p>
+      <p style="font-size: 0.85rem; margin-top: 0.25rem;">Perform an inference analysis on the Detector page to populate audit history.</p>
+      <a href="{{ url_for('upload_page') }}" class="nav-btn" style="display: inline-block; margin-top: 1.5rem;">
+        Go to Detector
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

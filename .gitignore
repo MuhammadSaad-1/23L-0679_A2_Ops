@@ -1,1 +1,41 @@
+# Large Datasets and Virtual Environments
 /data
+.env
+.env.*
+!.env.example
+.venv
+venv/
+env/
+mlruns/
+
+# Python Cache & Testing
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Database Files
+database/*.db
+database/*.sqlite3
+*.db
+*.sqlite3
+
+# Temporary Office & Document Files
+*.docx
+~$*
+*.tmp
+*.pdf
+
+# Scratch & Throwaway Data
+scratch/
+warmup_data/
+task2_outputs/tuner_toy_dir/
+task2_outputs/tuner_visionguard_dir/
+1.4_dvc_toy/
+
+# Duplicate Models (Keep only the required champion and baseline files)
+task2_outputs/transfer_learning_best.keras
+task2_outputs/2.3_mobilenetv2_stage1.keras

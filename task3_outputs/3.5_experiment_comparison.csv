@@ -1,0 +1,7 @@
+Run Name,Backbone,Learning Rate,Augmentation,Unfrozen Layers,Dropout,Val Acc,Test Acc,Test AUC,Test Loss
+Run_1_Baseline_LR_1e3,Baseline_CNN,0.001,True,N/A,0.4,0.5548,0.551,0.6512,0.6812
+Run_2_Baseline_LR_1e4,Baseline_CNN,0.0001,True,N/A,0.4,0.5548,0.551,0.6532,0.688
+Run_3_Baseline_NoAugmentation,Baseline_CNN,0.001,False,N/A,0.4,0.5616,0.6122,0.706,0.6606
+Run_4_MobileNetV2_Frozen10,MobileNetV2,0.0005,True,10,0.3,0.6986,0.7007,0.8535,0.5717
+Run_5_MobileNetV2_Frozen30_Champion,MobileNetV2,0.0005,True,30,0.3,0.6849,0.7347,0.8715,0.5329
+Run_6_MobileNetV2_HighDropout,MobileNetV2,0.0005,True,30,0.5,0.7055,0.7347,0.8787,0.5012

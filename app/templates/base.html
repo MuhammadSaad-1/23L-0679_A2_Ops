@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}VisionGuard - AI Image Detector{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="{{ url_for('upload_page') }}" class="nav-brand">
+      <div class="brand-icon">🛡️</div>
+      <span class="brand-title">VisionGuard</span>
+      <span class="brand-badge">MLOps v2</span>
+    </a>
+
+    <div class="nav-menu">
+      <a href="{{ url_for('upload_page') }}" class="nav-link {% if request.endpoint == 'upload_page' %}active{% endif %}">Detector</a>
+      <a href="{{ url_for('history_page') }}" class="nav-link {% if request.endpoint == 'history_page' %}active{% endif %}">Audit History</a>
+      <a href="{{ url_for('health_check') }}" target="_blank" class="nav-link" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-cyan);">/health</a>
+      <a href="{{ url_for('upload_page') }}" class="nav-btn">+ New Analysis</a>
+    </div>
+  </nav>
+
+  <!-- Main Body Content -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>VisionGuard MLOps Deployment &copy; 2026 | FAST National University | Student ID: 23L-0679</p>
+    <p style="margin-top: 0.35rem; color: var(--text-dim); font-size: 0.75rem;">Model: MobileNetV2 Fine-Tuned (Top 30 Unfrozen) | MLflow Alias: @champion</p>
+  </footer>
+
+</body>
+</html>

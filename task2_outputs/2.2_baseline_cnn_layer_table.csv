@@ -1,0 +1,19 @@
+Layer Name,Type,Output Shape,Param Count
+input_image,InputLayer,"(None, 224, 224, 3)",0
+rescaling_norm,Rescaling,"(None, 224, 224, 3)",0
+conv1_32,Conv2D,"(None, 224, 224, 32)",896
+bn1,BatchNormalization,"(None, 224, 224, 32)",128
+relu1,Activation,"(None, 224, 224, 32)",0
+pool1,MaxPooling2D,"(None, 112, 112, 32)",0
+conv2_64,Conv2D,"(None, 112, 112, 64)",18496
+bn2,BatchNormalization,"(None, 112, 112, 64)",256
+relu2,Activation,"(None, 112, 112, 64)",0
+pool2,MaxPooling2D,"(None, 56, 56, 64)",0
+conv3_128,Conv2D,"(None, 56, 56, 128)",73856
+bn3,BatchNormalization,"(None, 56, 56, 128)",512
+relu3,Activation,"(None, 56, 56, 128)",0
+pool3,MaxPooling2D,"(None, 28, 28, 128)",0
+global_avg_pool,GlobalAveragePooling2D,"(None, 128)",0
+dense_features,Dense,"(None, 64)",8256
+dropout_regularization,Dropout,"(None, 64)",0
+sigmoid_classifier,Dense,"(None, 1)",65

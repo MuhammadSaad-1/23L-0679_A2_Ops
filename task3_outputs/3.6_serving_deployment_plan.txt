@@ -1,0 +1,35 @@
+======================================================================
+  TASK 3.6: PRODUCTION SERVING & DEPLOYMENT ARCHITECTURAL PLAN
+======================================================================
+
+CRITICAL REQUIREMENT:
+The serving web application (Task 4 / Task 6) must NOT query DagsHub/MLflow
+remotely on every incoming HTTP inference request!
+
+WHY PER-REQUEST REMOTE FETCHING IS FORBIDDEN:
+1. High Latency: Downloading 15MB+ model weights over the internet introduces
+   a 2 to 5-second latency penalty per user image upload.
+2. Fragility: A transient network hiccup or rate-limiting from DagsHub would
+   take down the production web service.
+3. Cost & Bandwidth: Incurring unnecessary redundant egress costs.
+
+PRODUCTION DEPLOYMENT WORKFLOW:
+1. CI/CD or Build Stage:
+   - During Docker container image creation (or continuous deployment step),
+     a specialized bootstrap script executes:
+       mlflow.artifacts.download_artifacts(
+           artifact_uri="models:/VisionGuard_Classifier@champion",
+           dst_path="app/champion_model.keras"
+       )
+   - The verified champion model binary is baked directly into the Docker image
+     or mounted via an external persistent volume.
+
+2. Application Startup (Warm-Up Phase):
+   - When the Flask app starts (`app.py`), the model is loaded ONCE into GPU/CPU
+     memory during process initialization:
+       champion_model = tf.keras.models.load_model("app/champion_model.keras")
+
+3. Request Lifecycle:
+   - When an end-user uploads an image to the `/predict` route, Flask passes the
+     image directly to the in-memory `champion_model.predict()` function.
+   - Response time is sub-50 milliseconds with zero external network dependencies.

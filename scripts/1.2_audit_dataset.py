@@ -4,7 +4,9 @@ from collections import defaultdict
 from PIL import Image
 import pandas as pd
 
-DATA_DIR = "data"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(SCRIPT_DIR) if os.path.basename(SCRIPT_DIR) == "scripts" else SCRIPT_DIR
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
 records = []
 corrupt_files = []
@@ -46,14 +48,15 @@ for root, dirs, files in os.walk(DATA_DIR):
             with Image.open(file_path) as img:
                 img.verify()  # Check file integrity
             
-            # Reopen to read dimensions and mode (verify closes the image pointer)
             with Image.open(file_path) as img:
                 width, height = img.size
                 mode = img.mode
                 img_format = img.format
 
+            # Save relative path from BASE_DIR for portability
+            rel_path = os.path.relpath(file_path, BASE_DIR)
             records.append({
-                "filepath": file_path,
+                "filepath": rel_path,
                 "class": label,
                 "file_size_kb": round(file_size_kb, 2),
                 "width": width,
@@ -66,7 +69,11 @@ for root, dirs, files in os.walk(DATA_DIR):
             corrupt_files.append((file_path, f"Image decode error: {e}"))
 
 df = pd.DataFrame(records)
-df.to_csv("1.2_dataset_audit.csv", index=False)
+task1_dir = os.path.join(BASE_DIR, "task1_outputs")
+os.makedirs(task1_dir, exist_ok=True)
+out_csv = os.path.join(task1_dir, "1.2_dataset_audit.csv")
+df.to_csv(out_csv, index=False)
+print(f"[Saved] Dataset audit saved to: {out_csv}")
 
 # Detect duplicate groups
 duplicates = {h: paths for h, paths in hashes.items() if len(paths) > 1}
@@ -98,5 +105,3 @@ summary = df.groupby("class").agg({
     "file_size_kb": ["min", "median", "max"]
 })
 print(summary)
-print("=" * 65)
-print("Audit saved to '1.2_dataset_audit.csv'.")

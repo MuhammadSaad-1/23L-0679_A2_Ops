@@ -1,0 +1,31 @@
+=== Stage 1 Trainable Layers ===
+ - global_avg_pool
+ - head_bn
+ - head_dropout
+ - head_dense
+ - sigmoid_classifier
+
+Total Trainable in Stage 1: 5
+
+=== Stage 2 Unfrozen Backbone Layers (Top 30 Block) ===
+ - block_14_expand
+ - block_14_expand_relu
+ - block_14_depthwise
+ - block_14_depthwise_relu
+ - block_14_project
+ - block_14_add
+ - block_15_expand
+ - block_15_expand_relu
+ - block_15_depthwise
+ - block_15_depthwise_relu
+ - block_15_project
+ - block_15_add
+ - block_16_expand
+ - block_16_expand_relu
+ - block_16_depthwise
+ - block_16_depthwise_relu
+ - block_16_project
+ - Conv_1
+ - out_relu
+
+Total Trainable Backbone in Stage 2: 19

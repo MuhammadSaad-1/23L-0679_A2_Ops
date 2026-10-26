@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}VisionGuard - AI vs Real Image Classification{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+  <span class="hero-tag">✨ Advanced Computer Vision & Deep Learning</span>
+  <h1 class="hero-title">Verify Authenticity of Visual Media</h1>
+  <p class="hero-desc">
+    Upload an artwork or photograph to evaluate whether it was created by a human artist
+    or synthesized by generative diffusion models.
+  </p>
+</div>
+
+<div class="glass-card" style="max-width: 680px; margin: 0 auto;">
+  <form id="uploadForm" action="{{ url_for('predict_route') }}" method="POST" enctype="multipart/form-data">
+    
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon-circle">📸</div>
+      <div class="upload-primary-text">Click to browse or drop image here</div>
+      <div class="upload-subtext">Supported formats: PNG, JPG, JPEG, WEBP (Max 5MB)</div>
+      
+      <input type="file" id="fileInput" name="file" class="file-input" accept=".png,.jpg,.jpeg,.webp" required>
+      
+      <div id="filePill" class="selected-file-pill">
+        <span>📎</span>
+        <strong id="fileNameDisplay">image.png</strong>
+        <span id="fileSizeDisplay" style="color: var(--text-dim); font-size: 0.8rem;">(0 KB)</span>
+      </div>
+    </div>
+
+    <button type="submit" id="submitBtn" class="submit-btn" disabled>
+      ⚡ Run Neural Classification
+    </button>
+  </form>
+
+  <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--text-dim);">
+    🔒 Zero Disk Retention: Images are evaluated in volatile RAM memory and never stored on server storage.
+  </div>
+</div>
+
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const filePill = document.getElementById('filePill');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function handleFile(file) {
+    if (!file) return;
+    fileNameDisplay.textContent = file.name;
+    const kb = (file.size / 1024).toFixed(1);
+    fileSizeDisplay.textContent = `(${kb} KB)`;
+    filePill.style.display = 'inline-flex';
+    submitBtn.removeAttribute('disabled');
+    submitBtn.textContent = `⚡ Classify "${file.name}"`;
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFile(e.target.files[0]);
+    }
+  });
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    }, false);
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      handleFile(files[0]);
+    }
+  });
+</script>
+{% endblock %}

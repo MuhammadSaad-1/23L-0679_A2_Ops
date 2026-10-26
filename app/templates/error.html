@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}VisionGuard - Error {{ error_code }}{% endblock %}
+
+{% block content %}
+<div class="glass-card error-card">
+  <div class="error-code">{{ error_code }}</div>
+  <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem;">{{ error_title }}</h2>
+  <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">
+    {{ error_message }}
+  </p>
+
+  <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 2rem;">
+    <strong>Security & Validation Notice:</strong>
+    <ul style="margin-left: 1.25rem; margin-top: 0.5rem; line-height: 1.5;">
+      <li>Only valid image formats (PNG, JPG, JPEG, WEBP) are accepted.</li>
+      <li>Maximum payload size is strictly capped at 5 Megabytes (5MB).</li>
+      <li>Files must contain valid, decodable pixel headers.</li>
+    </ul>
+  </div>
+
+  <a href="{{ url_for('upload_page') }}" class="submit-btn" style="text-decoration: none; display: inline-block;">
+    &larr; Return to Secure Detector
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+Model,Threshold,Accuracy,Precision,Recall,F1-Score,ROC-AUC
+Baseline CNN (Default Th=0.50),0.5,0.4626,0.4539,0.9697,0.6184,0.5518
+Baseline CNN (Optimal Th=0.51),0.51,0.4762,0.4522,0.7879,0.5746,0.5518
+Transfer Learning (Default Th=0.50),0.5,0.7619,0.7246,0.7576,0.7407,0.8638
+Transfer Learning (Optimal Th=0.35),0.35,0.7687,0.7051,0.8333,0.7639,0.8638

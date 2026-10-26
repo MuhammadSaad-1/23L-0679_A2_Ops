@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}VisionGuard - Classification Verdict{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <a href="{{ url_for('upload_page') }}" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+    &larr; Analyze Another Image
+  </a>
+</div>
+
+<div class="glass-card">
+  <div class="result-grid">
+    
+    <!-- Left Column: In-Memory Decoded Image Preview -->
+    <div>
+      <div class="preview-container">
+        <img src="{{ result.preview_data_uri }}" alt="Uploaded Image Preview" class="preview-img">
+      </div>
+      <p style="text-align: center; margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-dim); font-family: var(--font-mono);">
+        Processed In-Memory Buffer: {{ result.filename }}
+      </p>
+    </div>
+
+    <!-- Right Column: Model Decision & Diagnostics -->
+    <div>
+      
+      <!-- Verdict Banner -->
+      {% if result.verdict_code == 'REAL' %}
+        <div class="verdict-banner real">
+          <span>🌿</span>
+          <span>{{ result.verdict }}</span>
+        </div>
+      {% else %}
+        <div class="verdict-banner ai">
+          <span>🤖</span>
+          <span>{{ result.verdict }}</span>
+        </div>
+      {% endif %}
+
+      <h2 style="font-size: 1.85rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">
+        {{ result.confidence_pct }}% Certainty
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Decision rule evaluated against threshold τ = {{ result.threshold }}
+      </p>
+
+      <!-- Animated Confidence Meter -->
+      <div class="meter-wrapper">
+        <div class="meter-header">
+          <span>Model Confidence</span>
+          <span>{{ result.confidence_pct }}%</span>
+        </div>
+        <div class="meter-bar-track">
+          <div class="meter-bar-fill {% if result.verdict_code == 'REAL' %}real{% else %}ai{% endif %}" 
+               style="width: {{ result.confidence_pct }}%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantitative Technical Metrics Table -->
+      <table class="diagnostics-table">
+        <tr>
+          <td>Raw Output P(Real)</td>
+          <td>{{ "%.4f"|format(result.raw_probability) }}</td>
+        </tr>
+        <tr>
+          <td>Inference Latency</td>
+          <td>{{ result.latency_ms }} ms</td>
+        </tr>
+        <tr>
+          <td>Model Architecture</td>
+          <td>{{ result.model_name }}</td>
+        </tr>
+        <tr>
+          <td>Decision Threshold</td>
+          <td>{{ result.threshold }}</td>
+        </tr>
+      </table>
+
+      <!-- Honest Technical Caveat -->
+      <div class="caveat-box">
+        <strong>⚠️ Technical Caveat:</strong><br>
+        {{ result.caveat }}
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <a href="{{ url_for('upload_page') }}" class="nav-btn" style="flex: 1; text-align: center;">
+          Upload New Image
+        </a>
+        <a href="{{ url_for('history_page') }}" class="nav-link" style="border: 1px solid var(--border-subtle); text-align: center;">
+          View Audit History
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+# Version Control & Environments
+.git
+.gitignore
+.venv
+venv/
+env/
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Secrets & Environment Variables (Crucial for Security)
+.env
+.env.*
+!.env.example
+
+# Large Data & Version Control Files
+data/
+eda_outputs/
+mlruns/
+1.4_dvc_toy/
+.dvc/
+.dvcignore
+data.dvc
+
+# Local Documentation & Assignment Questions
+*.pdf
+*.docx
+~$*
+
+# Temporary & Scratch Files
+scratch/
+task1_outputs/
+.pytest_cache/
+.coverage
+htmlcov/

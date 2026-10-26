@@ -1,0 +1,19 @@
+======================================================================
+           TASK 2.7: HYPERPARAMETER TUNING DISCUSSION
+======================================================================
+
+1. Hyperparameter That Mattered Most:
+   The learning rate had the largest impact on convergence and stability.
+   Setting LR too high (e.g. 1e-3) with unfrozen backbone layers caused weight
+   distortion ('catastrophic forgetting'), whereas moderate rates (1e-4 to 5e-4)
+   provided steady and smooth gradient descent.
+
+2. Why Selecting the Best Validation Score Can Overfit the Validation Set:
+   Every time we evaluate a model configuration on the validation set and use
+   its validation score to pick the 'best' hyperparameters, we effectively leak
+   information from the validation set into our meta-decision process. Over many
+   trials, random statistical variance in the validation samples allows
+   configurations that coincidentally fit the idiosyncratic noise of that specific
+   validation split to score highest, even if they generalize poorly. This is why
+   a completely held-out, untouched TEST set is mandatory for final unbiased
+   performance evaluation.

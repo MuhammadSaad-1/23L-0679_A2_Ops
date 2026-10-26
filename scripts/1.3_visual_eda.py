@@ -4,10 +4,18 @@ import seaborn as sns
 import pandas as pd
 from PIL import Image
 
-# Load the audit records generated in Task 1.2
-csv_file = "1.2_dataset_audit.csv" if os.path.exists("1.2_dataset_audit.csv") else "dataset_audit.csv"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(SCRIPT_DIR) if os.path.basename(SCRIPT_DIR) == "scripts" else SCRIPT_DIR
+
+csv_file = os.path.join(BASE_DIR, "task1_outputs", "1.2_dataset_audit.csv")
+if not os.path.exists(csv_file):
+    csv_file = os.path.join(BASE_DIR, "1.2_dataset_audit.csv")
+if not os.path.exists(csv_file):
+    csv_file = os.path.join(BASE_DIR, "dataset_audit.csv")
 df = pd.read_csv(csv_file)
-os.makedirs("eda_outputs", exist_ok=True)
+
+eda_dir = os.path.join(BASE_DIR, "task1_outputs")
+os.makedirs(eda_dir, exist_ok=True)
 
 # -------------------------------------------------------------
 # 1. Figure 1: Sample Grid of Images per Class
@@ -18,9 +26,10 @@ fig, axes = plt.subplots(len(classes), 5, figsize=(15, 6))
 for row_idx, cls in enumerate(classes):
     cls_df = df[df["class"] == cls]
     sample_paths = cls_df.sample(min(5, len(cls_df)), random_state=42)["filepath"].tolist()
-    for col_idx, img_path in enumerate(sample_paths):
+    for col_idx, rel_p in enumerate(sample_paths):
         ax = axes[row_idx, col_idx]
-        img = Image.open(img_path)
+        full_p = rel_p if os.path.isabs(rel_p) else os.path.join(BASE_DIR, rel_p)
+        img = Image.open(full_p)
         ax.imshow(img)
         ax.axis("off")
         if col_idx == 0:
@@ -28,7 +37,7 @@ for row_idx, cls in enumerate(classes):
 
 plt.suptitle("Figure 1: Sample Images per Class (VisionGuard)", fontsize=14, y=0.98)
 plt.tight_layout()
-grid_path = "eda_outputs/sample_grid.png"
+grid_path = os.path.join(eda_dir, "1.3_sample_grid.png")
 plt.savefig(grid_path, dpi=300)
 plt.close()
 print(f"Saved: {grid_path}")
@@ -55,7 +64,7 @@ axes[2].set_xlabel("Size (KB)")
 
 plt.suptitle("Figure 2: Dimension and File Size Distributions", fontsize=14, y=1.02)
 plt.tight_layout()
-dist_path = "eda_outputs/distributions.png"
+dist_path = os.path.join(eda_dir, "1.3_distributions.png")
 plt.savefig(dist_path, dpi=300)
 plt.close()
 print(f"Saved: {dist_path}")
