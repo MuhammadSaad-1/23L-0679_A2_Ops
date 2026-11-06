@@ -1,7 +1,13 @@
 import os
+from dotenv import load_dotenv
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR) if os.path.basename(SCRIPT_DIR) in ["app", "scripts"] else SCRIPT_DIR
+
+# Automatically load environment variables from project .env
+env_file_path = os.path.join(BASE_DIR, ".env")
+if os.path.exists(env_file_path):
+    load_dotenv(env_file_path)
 
 class Config:
     # Model Artifact Path (defaults to MobileNetV2 Champion)

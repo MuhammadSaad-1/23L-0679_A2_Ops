@@ -38,6 +38,7 @@ print(f" Environment : Production Server Mode (debug={Config.DEBUG})")
 print(f" Model Path  : {Config.MODEL_PATH}")
 print(f" Threshold   : {Config.DECISION_THRESHOLD}")
 print(f" Database    : {Config.DATABASE_PATH}")
+print(f" Remote API  : {Config.REMOTE_API_URL or 'None (Local Inference)'}")
 print("=" * 65)
 
 # Initialize database schema (Task 5 requirement)
@@ -135,7 +136,8 @@ def predict_route():
                 data=body,
                 headers={"Content-Type": content_type, "User-Agent": "VisionGuard-LocalClient/1.0"}
             )
-            with urllib.request.urlopen(req, timeout=30) as response:
+            # 120s timeout allows Render free-tier cold-start (spin-up from sleep)
+            with urllib.request.urlopen(req, timeout=120) as response:
                 remote_data = json.loads(response.read().decode("utf-8"))
 
             b64_encoded = base64.b64encode(image_bytes).decode("utf-8")
