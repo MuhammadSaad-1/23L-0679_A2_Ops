@@ -1,0 +1,57 @@
+=============================================================================
+VISIONGUARD - TASK 7: CURL & POSTMAN TESTING SCRIPT / EXAMPLES
+=============================================================================
+
+1. CURL COMMAND - HEALTH CHECK:
+-----------------------------------------------------------------------------
+curl -X GET http://localhost:5000/health
+
+# Cloud Example:
+# curl -X GET https://<your-cloud-domain>/health
+
+Expected Response:
+{
+  "database_connected": true,
+  "decision_threshold": 0.5,
+  "max_content_length_mb": 5.0,
+  "model_architecture": "MobileNetV2_Champion_v2",
+  "model_loaded": true,
+  "service": "VisionGuard AI Classifier",
+  "status": "healthy"
+}
+
+-----------------------------------------------------------------------------
+2. CURL COMMAND - REST PREDICTION (MULTIPART IMAGE UPLOAD):
+-----------------------------------------------------------------------------
+curl -X POST http://localhost:5000/api/predict \
+  -F "file=@eda_outputs/sample_real_0.png"
+
+# PowerShell syntax:
+# curl.exe -X POST http://localhost:5000/api/predict -F "file=@eda_outputs/sample_real_0.png"
+
+Expected Response (HTTP 200 OK):
+{
+  "caveat": "High statistical certainty on benchmark features. However, state-of-the-art diffusion models with advanced post-processing or manual artist touch-ups may yield subtle false negatives.",
+  "confidence": 0.9418,
+  "confidence_pct": 94.18,
+  "decision_threshold": 0.5,
+  "filename": "sample_real_0.png",
+  "latency_ms": 23.4,
+  "model_architecture": "MobileNetV2_Champion_v2",
+  "raw_probability": 0.9418,
+  "status": "success",
+  "verdict": "RealArt (Human Created)",
+  "verdict_code": "REAL"
+}
+
+-----------------------------------------------------------------------------
+3. CURL COMMAND - SECURITY REJECTION TEST (INVALID EXTENSION):
+-----------------------------------------------------------------------------
+curl -X POST http://localhost:5000/api/predict \
+  -F "file=@README.md"
+
+Expected Response (HTTP 400 Bad Request):
+{
+  "error": "Unsupported extension '.md'. Allowed formats: ['jpeg', 'jpg', 'png', 'webp']",
+  "status": "failed"
+}

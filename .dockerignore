@@ -27,10 +27,21 @@ data.dvc
 *.pdf
 *.docx
 ~$*
+README.md
 
-# Temporary & Scratch Files
+# Development & CI/CD Configurations
+.github/
+tests/
+
+# Temporary, Scratch & Local Outputs Not Needed for Web Serving
 scratch/
 task1_outputs/
+task3_outputs/
+task4_outputs/
+task5_outputs/
+task6_outputs/
+task7_outputs/
+database/*.db
 .pytest_cache/
 .coverage
 htmlcov/

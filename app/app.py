@@ -7,6 +7,11 @@ BASE_DIR = os.path.dirname(SCRIPT_DIR) if os.path.basename(SCRIPT_DIR) in ["app"
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+import base64
+import json
+import uuid
+import urllib.request
+import urllib.parse
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -109,26 +114,73 @@ def predict_route():
             )
         ), 413
 
-    # Validation Failure Case 3: Undecodable / Corrupted image byte payload
-    try:
-        prediction_result = predictor.predict(image_bytes, filename=clean_filename)
-    except ValueError as val_err:
-        return render_template("error.html",
-            error_code=400,
-            error_title="Corrupted or Invalid Image",
-            error_message=(
-                f"File '{clean_filename}' appears to have an image extension but its internal byte structure "
-                f"cannot be decoded by the image engine. Reason: {val_err}"
-            )
-        ), 400
-    except Exception as general_err:
-        return render_template("error.html",
-            error_code=500,
-            error_title="Inference Pipeline Error",
-            error_message=f"An unexpected internal error occurred during tensor evaluation: {general_err}"
-        ), 500
+    # -------------------------------------------------------------
+    # Task 8 Branch: Cloud API Delegation vs Local Inference
+    # -------------------------------------------------------------
+    if Config.REMOTE_API_URL:
+        # Delegate inference to external Cloud API
+        try:
+            boundary = f"----WebKitFormBoundary{uuid.uuid4().hex}"
+            content_type = f"multipart/form-data; boundary={boundary}"
+            mime_sub = 'jpeg' if file_ext in ['jpg', 'jpeg'] else file_ext
 
-    # Log immutable audit entry into SQLite database (Task 5 requirement)
+            body = (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="file"; filename="{clean_filename}"\r\n'
+                f"Content-Type: image/{mime_sub}\r\n\r\n"
+            ).encode("utf-8") + image_bytes + f"\r\n--{boundary}--\r\n".encode("utf-8")
+
+            req = urllib.request.Request(
+                Config.REMOTE_API_URL,
+                data=body,
+                headers={"Content-Type": content_type, "User-Agent": "VisionGuard-LocalClient/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                remote_data = json.loads(response.read().decode("utf-8"))
+
+            b64_encoded = base64.b64encode(image_bytes).decode("utf-8")
+            data_uri = f"data:image/{mime_sub};base64,{b64_encoded}"
+
+            prediction_result = {
+                "filename": clean_filename,
+                "verdict": remote_data.get("verdict", "Unknown"),
+                "verdict_code": remote_data.get("verdict_code", "UNKNOWN"),
+                "confidence_pct": remote_data.get("confidence_pct", 0.0),
+                "confidence": remote_data.get("confidence", 0.0),
+                "raw_probability": remote_data.get("raw_probability", remote_data.get("confidence", 0.0)),
+                "threshold": remote_data.get("decision_threshold", Config.DECISION_THRESHOLD),
+                "latency_ms": remote_data.get("latency_ms", 0.0),
+                "model_name": f"{remote_data.get('model_architecture', 'Remote_Model')} (via Cloud API)",
+                "caveat": remote_data.get("caveat", "Inference executed via remote cloud API endpoint."),
+                "preview_data_uri": data_uri
+            }
+        except Exception as cloud_err:
+            return render_template("error.html",
+                error_code=502,
+                error_title="Remote Cloud API Unavailable",
+                error_message=f"Failed to communicate with Cloud Model API at '{Config.REMOTE_API_URL}'. Details: {cloud_err}"
+            ), 502
+    else:
+        # Standard local in-memory inference pipeline
+        try:
+            prediction_result = predictor.predict(image_bytes, filename=clean_filename)
+        except ValueError as val_err:
+            return render_template("error.html",
+                error_code=400,
+                error_title="Corrupted or Invalid Image",
+                error_message=(
+                    f"File '{clean_filename}' appears to have an image extension but its internal byte structure "
+                    f"cannot be decoded by the image engine. Reason: {val_err}"
+                )
+            ), 400
+        except Exception as general_err:
+            return render_template("error.html",
+                error_code=500,
+                error_title="Inference Pipeline Error",
+                error_message=f"An unexpected internal error occurred during tensor evaluation: {general_err}"
+            ), 500
+
+    # Log immutable audit entry into SQLite/PostgreSQL database (Task 5 requirement)
     try:
         db_helper.log_prediction(
             db_path=Config.DATABASE_PATH,
@@ -141,10 +193,75 @@ def predict_route():
             model_version=prediction_result["model_name"]
         )
     except Exception as db_err:
-        print(f"[Warning] Failed to log audit record to SQLite: {db_err}")
+        print(f"[Warning] Failed to log audit record: {db_err}")
 
     # Render result page with in-memory base64 preview and honest caveat
     return render_template("result.html", result=prediction_result)
+
+@app.route("/api/predict", methods=["POST"])
+def api_predict():
+    """
+    Task 7: Dedicated REST API Endpoint for Public Cloud Ingestion.
+    Accepts multipart/form-data image uploads, runs in-memory inference,
+    records immutable database audit logs, and returns structured JSON responses.
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded. Expected form field 'file'.", "status": "failed"}), 400
+
+    file = request.files["file"]
+    if not file or file.filename.strip() == "":
+        return jsonify({"error": "Empty file uploaded.", "status": "failed"}), 400
+
+    clean_filename = secure_filename(file.filename) or "upload.png"
+    file_ext = clean_filename.rsplit(".", 1)[-1].lower() if "." in clean_filename else ""
+    if file_ext not in Config.ALLOWED_EXTENSIONS:
+        return jsonify({
+            "error": f"Unsupported extension '.{file_ext}'. Allowed formats: {sorted(list(Config.ALLOWED_EXTENSIONS))}",
+            "status": "failed"
+        }), 400
+
+    image_bytes = file.read()
+    if len(image_bytes) > Config.MAX_CONTENT_LENGTH:
+        return jsonify({
+            "error": f"Payload size ({len(image_bytes)/(1024*1024):.2f}MB) exceeds 5MB limit.",
+            "status": "failed"
+        }), 413
+
+    try:
+        result = predictor.predict(image_bytes, filename=clean_filename)
+    except ValueError as val_err:
+        return jsonify({"error": f"Corrupted or invalid image: {val_err}", "status": "failed"}), 400
+    except Exception as err:
+        return jsonify({"error": f"Internal inference pipeline error: {err}", "status": "failed"}), 500
+
+    # Log immutable audit entry into database
+    try:
+        db_helper.log_prediction(
+            db_path=Config.DATABASE_PATH,
+            filename=clean_filename,
+            verdict=result["verdict"],
+            verdict_code=result["verdict_code"],
+            confidence=result["confidence"],
+            raw_prob=result["raw_probability"],
+            latency_ms=result["latency_ms"],
+            model_version=result["model_name"]
+        )
+    except Exception as db_err:
+        print(f"[Warning] Failed to log API audit record: {db_err}")
+
+    return jsonify({
+        "status": "success",
+        "filename": result["filename"],
+        "verdict": result["verdict"],
+        "verdict_code": result["verdict_code"],
+        "confidence_pct": result["confidence_pct"],
+        "confidence": result["confidence"],
+        "raw_probability": result["raw_probability"],
+        "decision_threshold": result["threshold"],
+        "latency_ms": result["latency_ms"],
+        "model_architecture": result["model_name"],
+        "caveat": result["caveat"]
+    }), 200
 
 @app.route("/history", methods=["GET"])
 def history_page():

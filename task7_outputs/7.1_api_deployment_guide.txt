@@ -1,0 +1,143 @@
+=============================================================================
+VISIONGUARD - TASK 7: PUBLIC API CLOUD DEPLOYMENT & VERIFICATION REPORT
+=============================================================================
+Author Roll Number : 23L-0679
+System Name        : VisionGuard AI vs Real Art Classifier
+Target Milestone   : Task 7 - Public REST API Deployment (15 Marks)
+
+-----------------------------------------------------------------------------
+1. ARCHITECTURAL OVERVIEW
+-----------------------------------------------------------------------------
+Task 7 requires deploying the VisionGuard model inference API to a publicly
+reachable cloud server, completely accessible outside the local network. 
+
+The application architecture exposes two distinct interfaces:
+1. Web User Interface (HTML):
+   - Route: GET / (Upload Form), POST /predict (Result Card), GET /history
+2. Headless REST API (JSON):
+   - Route: GET /health (Readiness & Configuration probe)
+   - Route: POST /api/predict (Multipart/form-data ingestion for Postman & external callers)
+
+When external clients (e.g., Postman, mobile clients, or the local Flask client
+in Task 8) send an image to /api/predict, the service executes in-memory 
+inference with zero disk retention and returns structured JSON:
+{
+  "status": "success",
+  "filename": "sample_real_0.png",
+  "verdict": "RealArt (Human Created)",
+  "verdict_code": "REAL",
+  "confidence_pct": 94.25,
+  "confidence": 0.9425,
+  "raw_probability": 0.9425,
+  "decision_threshold": 0.5,
+  "latency_ms": 22.4,
+  "model_architecture": "MobileNetV2_Champion_v2",
+  "caveat": "High statistical certainty on benchmark features..."
+}
+
+-----------------------------------------------------------------------------
+2. STEP-BY-STEP CLOUD DEPLOYMENT OPTIONS
+-----------------------------------------------------------------------------
+The assignment permits any cloud platform (Oracle Cloud, Vercel, Render, 
+Hugging Face, GCP, AWS, Azure). Below are the two most practical, battle-tested
+pathways:
+
+=============================================================================
+PATHWAY 1 (RECOMMENDED): HUGGING FACE SPACES (DOCKER)
+- 100% Free, NO credit card required.
+- Dedicated 16 GB RAM + 2 vCPU (TensorFlow runs flawlessly without memory limits).
+- Gives immediate public HTTPS URL with automatic SSL certificates.
+=============================================================================
+Step 1: Create a Hugging Face Account:
+  - Visit https://huggingface.co/join and sign up.
+
+Step 2: Create a New Space:
+  - Click your profile icon -> "New Space".
+  - Space Name: "23L-0679_A2_Ops" (or "visionguard-api").
+  - License: "mit" or "openrail".
+  - Select Space SDK: Choose "Docker" -> "Blank".
+  - Space Hardware: Free (2 vCPU, 16 GB RAM).
+  - Visibility: Public.
+  - Click "Create Space".
+
+Step 3: Connect Git & Push Your Repository:
+  - Hugging Face Spaces provides a dedicated Git remote URL:
+    https://huggingface.co/spaces/<your-hf-username>/23L-0679_A2_Ops
+  - In PowerShell, add the HF remote and push:
+    git remote add space https://huggingface.co/spaces/<your-hf-username>/23L-0679_A2_Ops
+    git push space main
+  - Hugging Face automatically detects the root Dockerfile, executes the build,
+    and spins up the container on port 5000.
+
+Step 4: Obtain Public Live URL:
+  - Once the build status turns green ("Running"), your direct public endpoint is:
+    https://<your-hf-username>-23l-0679-a2-ops.hf.space/health
+    https://<your-hf-username>-23l-0679-a2-ops.hf.space/api/predict
+
+=============================================================================
+PATHWAY 2: RENDER.COM (MANAGED CONTAINER SERVICE)
+- Free tier with GitHub integration.
+- Automatically rebuilds on git push.
+=============================================================================
+Step 1: Sign up at https://render.com using your GitHub account (MuhammadSaad-1).
+Step 2: Click "New +" -> "Web Service".
+Step 3: Select your repository: "MuhammadSaad-1/23L-0679_A2_Ops".
+Step 4: Configuration:
+  - Name: visionguard-api
+  - Region: Frankfurt (EU) or Oregon (US)
+  - Runtime: Docker
+  - Instance Type: Free
+  - Environment Variables (Optional):
+      DECISION_THRESHOLD = 0.5
+Step 5: Click "Create Web Service". Render builds the Dockerfile and assigns a
+  live URL: https://visionguard-api.onrender.com
+
+=============================================================================
+PATHWAY 3: ORACLE CLOUD INFRASTRUCTURE (OCI ALWAYS FREE VM)
+=============================================================================
+Step 1: Launch an Ubuntu 22.04 Compute Instance in OCI Console.
+Step 2: Open Ingress Rule in Virtual Cloud Network (VCN) Security List for TCP 5000.
+Step 3: SSH into the VM:
+  ssh -i your_key.key ubuntu@<PUBLIC_IP>
+Step 4: Install Docker & Docker Compose:
+  sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2
+Step 5: Clone repository and launch stack:
+  git clone https://github.com/MuhammadSaad-1/23L-0679_A2_Ops.git
+  cd 23L-0679_A2_Ops
+  cp .env.example .env
+  docker compose up -d --build
+Step 6: Endpoint reachable at: http://<PUBLIC_IP>:5000/api/predict
+
+-----------------------------------------------------------------------------
+3. POSTMAN API VALIDATION PROCEDURE
+-----------------------------------------------------------------------------
+To generate the required Postman evidence for the PDF report:
+
+1. Launch Postman (or use Postman Web / curl).
+2. Create a new request:
+   - Method: POST
+   - Target URL: {{BASE_URL}}/api/predict
+     (e.g., http://localhost:5000/api/predict for local dry-run,
+      or https://<your-cloud-domain>/api/predict for cloud)
+3. Headers:
+   - (Postman automatically sets Content-Type: multipart/form-data with boundary)
+4. Body:
+   - Select radio button: "form-data"
+   - Key: "file" (Hover over the Key input, change dropdown from "Text" to "File")
+   - Value: Choose any sample image (e.g., eda_outputs/sample_real_0.png)
+5. Click "Send":
+   - Verify Status: 200 OK
+   - Response Body format: JSON
+6. Negative Security Rejection Test:
+   - In the Body form-data, change file to a .txt file (e.g., README.md)
+   - Click "Send"
+   - Verify Status: 400 Bad Request
+   - Response Body: {"error": "Unsupported extension '.md'...", "status": "failed"}
+
+-----------------------------------------------------------------------------
+4. PROGRAMMATIC VERIFICATION
+-----------------------------------------------------------------------------
+You can also run the automated verification script to validate both local
+and cloud endpoints:
+  python scripts/7.1_test_api_postman.py --url http://localhost:5000
+  python scripts/7.1_test_api_postman.py --url https://<your-cloud-domain>

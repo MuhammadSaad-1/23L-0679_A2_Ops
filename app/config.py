@@ -33,5 +33,8 @@ class Config:
     HOST = os.getenv("HOST", "0.0.0.0")
     DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
+    # Cloud API Endpoint (Task 7 & 8: Local Flask calling Cloud Model API)
+    REMOTE_API_URL = os.getenv("REMOTE_API_URL", "").strip()
+
     # Model Name / Metadata
     MODEL_NAME = "MobileNetV2_Champion_v2"

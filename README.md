@@ -1,6 +1,6 @@
 # VisionGuard: AI vs Real Image Classification & MLOps Deployment
 
-[![VisionGuard CI](https://github.com/MSaad/23L-0679_A2_Ops/actions/workflows/ci.yml/badge.svg)](https://github.com/MSaad/23L-0679_A2_Ops/actions/workflows/ci.yml)
+[![VisionGuard CI](https://github.com/MuhammadSaad-1/23L-0679_A2_Ops/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaad-1/23L-0679_A2_Ops/actions/workflows/ci.yml)
 [![DagsHub Tracking](https://img.shields.io/badge/DagsHub-MLflow%20Tracking-blue)](https://dagshub.com/MSaad/23L-0679_A2_Ops)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-green.svg)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
@@ -25,7 +25,7 @@ The entire multi-container production stack (Flask App + PostgreSQL 15) can be l
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/MSaad/23L-0679_A2_Ops.git
+git clone https://github.com/MuhammadSaad-1/23L-0679_A2_Ops.git
 cd 23L-0679_A2_Ops
 
 # 2. Configure environment credentials

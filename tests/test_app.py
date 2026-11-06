@@ -58,3 +58,14 @@ def test_corrupted_image_rejected(client):
     response = client.post("/predict", data=data, content_type="multipart/form-data")
     assert response.status_code == 400
     assert b"Corrupted or Invalid Image" in response.data
+
+def test_api_predict_rejection(client):
+    """Verify Task 7 REST API endpoint rejects non-image formats with structured JSON."""
+    data = {
+        "file": (io.BytesIO(b"fake text content"), "document.txt")
+    }
+    response = client.post("/api/predict", data=data, content_type="multipart/form-data")
+    assert response.status_code == 400
+    json_data = response.get_json()
+    assert json_data["status"] == "failed"
+    assert "Unsupported extension" in json_data["error"]
